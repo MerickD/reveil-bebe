@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getSessionId, storeVote } from "@/lib/session";
-import { formatRemainingTime, getRemainingEditMs } from "@/lib/vote";
+import { getSessionId, getStoredVoterName, storeVote, storeVoterName } from "@/lib/session";
+import { formatRemainingTime, getRemainingEditMs, normalizeVoterName } from "@/lib/vote";
 import VoteFlowerBurst from "@/components/VoteFlowerBurst";
 import type { VoteChoice } from "@/types/votes";
 
@@ -25,6 +25,7 @@ export default function VoteButtons({ onVoteSuccess, disabled }: VoteButtonsProp
   const [error, setError] = useState<string | null>(null);
   const [burstKey, setBurstKey] = useState(0);
   const [burstChoice, setBurstChoice] = useState<VoteChoice>("fille");
+  const [voterName, setVoterName] = useState("");
 
   const applyVoteState = useCallback((data: VoteState) => {
     setVote(data);
@@ -59,6 +60,7 @@ export default function VoteButtons({ onVoteSuccess, disabled }: VoteButtonsProp
   }, [applyVoteState]);
 
   useEffect(() => {
+    setVoterName(getStoredVoterName());
     fetchVote();
   }, [fetchVote]);
 
@@ -89,11 +91,22 @@ export default function VoteButtons({ onVoteSuccess, disabled }: VoteButtonsProp
 
     const sessionId = getSessionId();
     const isUpdate = Boolean(vote);
+    const normalizedName = normalizeVoterName(voterName);
+
+    if (!isUpdate && !normalizedName) {
+      setError("Indiquez votre prénom pour voter (2 caractères minimum).");
+      setLoading(null);
+      return;
+    }
 
     const res = await fetch("/api/vote", {
       method: isUpdate ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session_id: sessionId, choice }),
+      body: JSON.stringify({
+        session_id: sessionId,
+        choice,
+        ...(isUpdate ? {} : { voter_name: normalizedName }),
+      }),
     });
 
     const data = await res.json();
@@ -114,6 +127,9 @@ export default function VoteButtons({ onVoteSuccess, disabled }: VoteButtonsProp
       canModify: data.canModify,
       remainingMs: data.remainingMs,
     });
+    if (normalizedName) {
+      storeVoterName(normalizedName);
+    }
     setBurstChoice(data.vote);
     setBurstKey((k) => k + 1);
     setLoading(null);
@@ -124,11 +140,13 @@ export default function VoteButtons({ onVoteSuccess, disabled }: VoteButtonsProp
   const canModify = vote?.canModify ?? false;
   const isLocked = Boolean(vote) && !canModify;
   const awaitingVote = !vote && !disabled && !initialLoading;
+  const nameReady = Boolean(normalizeVoterName(voterName));
+  const needsName = !vote;
 
   const filleDisabled =
-    disabled || loading !== null || isLocked || selected === "fille";
+    disabled || loading !== null || isLocked || selected === "fille" || (needsName && !nameReady);
   const garconDisabled =
-    disabled || loading !== null || isLocked || selected === "garcon";
+    disabled || loading !== null || isLocked || selected === "garcon" || (needsName && !nameReady);
 
   if (initialLoading) {
     return (
@@ -194,6 +212,33 @@ export default function VoteButtons({ onVoteSuccess, disabled }: VoteButtonsProp
             </p>
           )}
         </div>
+
+        {!vote && (
+          <div className="mb-5">
+            <label
+              htmlFor="voter-name"
+              className="mb-1.5 block text-center text-sm font-semibold text-[#6d5f66]"
+            >
+              Votre prénom
+            </label>
+            <input
+              id="voter-name"
+              type="text"
+              value={voterName}
+              onChange={(e) => {
+                setVoterName(e.target.value);
+                setError(null);
+              }}
+              placeholder="Ex. Marie"
+              maxLength={40}
+              autoComplete="name"
+              className="w-full rounded-xl border border-[#f0e8e4] bg-white/90 px-4 py-3 text-center text-[#5c4f56] outline-none ring-[#e0d4f0] placeholder:text-[#c4b8bc] focus:border-[var(--color-floral-rose-ring)] focus:ring-2 focus:ring-[var(--color-floral-rose-light)]"
+            />
+            <p className="mt-1.5 text-center text-xs text-[#a890a0]">
+              Pour nous seulement — pour savoir qui a voté
+            </p>
+          </div>
+        )}
 
         <div className="flex items-stretch gap-3">
           <button

@@ -26,3 +26,12 @@ export function formatRemainingTime(ms: number): string {
   if (min > 0) return sec > 0 ? `${min} min ${sec} s` : `${min} min`;
   return `${sec} s`;
 }
+
+export function normalizeVoterName(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+
+  const name = raw.trim().replace(/\s+/g, " ");
+  if (name.length < 2 || name.length > 40) return null;
+
+  return name;
+}

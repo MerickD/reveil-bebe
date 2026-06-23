@@ -4,6 +4,7 @@ export interface Vote {
   id: string;
   choice: VoteChoice;
   session_id: string;
+  voter_name: string;
   created_at: string;
 }
 

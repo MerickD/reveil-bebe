@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.votes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   choice TEXT NOT NULL CHECK (choice IN ('fille', 'garcon')),
   session_id TEXT NOT NULL,
+  voter_name TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
@@ -47,6 +48,12 @@ CREATE POLICY "Modification vote sous 5 minutes"
   );
 
 -- Pas de suppression côté public
+
+-- Prénoms réservés à la consultation dans Supabase (pas exposés via l'API publique)
+REVOKE SELECT ON public.votes FROM anon, authenticated;
+GRANT SELECT (id, choice, session_id, created_at) ON public.votes TO anon, authenticated;
+GRANT INSERT (choice, session_id, voter_name) ON public.votes TO anon, authenticated;
+GRANT UPDATE (choice) ON public.votes TO anon, authenticated;
 
 -- ============================================================
 -- Activer Supabase Realtime sur la table votes

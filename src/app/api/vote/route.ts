@@ -4,6 +4,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import {
   canModifyVote,
   getRemainingEditMs,
+  normalizeVoterName,
   VOTE_EDIT_WINDOW_MS,
 } from "@/lib/vote";
 import type { VoteChoice } from "@/types/votes";
@@ -52,16 +53,17 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { session_id: sessionId, choice } = body;
+  const { session_id: sessionId, choice, voter_name: voterNameRaw } = body;
+  const voterName = normalizeVoterName(voterNameRaw);
 
-  if (!sessionId || !isValidChoice(choice)) {
+  if (!sessionId || !isValidChoice(choice) || !voterName) {
     return NextResponse.json({ error: "Données invalides" }, { status: 400 });
   }
 
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("votes")
-    .insert({ session_id: sessionId, choice })
+    .insert({ session_id: sessionId, choice, voter_name: voterName })
     .select("choice, created_at")
     .single();
 

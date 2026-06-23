@@ -25,6 +25,7 @@ export type Database = {
         Insert: {
           choice: Vote["choice"];
           session_id: string;
+          voter_name: string;
         };
         Update: never;
       };
