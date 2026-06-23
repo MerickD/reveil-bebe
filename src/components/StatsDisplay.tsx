@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { computeStats, type VoteStats } from "@/types/votes";
 
 const EMPTY_STATS: VoteStats = {
@@ -12,34 +12,49 @@ const EMPTY_STATS: VoteStats = {
   garconPercent: 50,
 };
 
+async function fetchVoteStats(client: NonNullable<ReturnType<typeof createClient>>) {
+  const { data, error } = await client.from("votes").select("choice");
+  if (!error && data) {
+    return computeStats(data);
+  }
+  return null;
+}
+
 export default function StatsDisplay() {
   const [stats, setStats] = useState<VoteStats>(EMPTY_STATS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = createClient();
-
-    async function fetchVotes() {
-      const { data, error } = await supabase.from("votes").select("choice");
-      if (!error && data) {
-        setStats(computeStats(data));
-      }
+    const maybeClient = createClient();
+    if (maybeClient === null) {
       setLoading(false);
+      return;
     }
+    const client: NonNullable<ReturnType<typeof createClient>> = maybeClient;
 
-    fetchVotes();
+    const refresh = () => {
+      void fetchVoteStats(client)
+        .then((next) => {
+          if (next) setStats(next);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    };
 
-    const channel = supabase
+    refresh();
+
+    const channel = client
       .channel("votes-realtime")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "votes" },
-        () => fetchVotes()
+        refresh
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      client.removeChannel(channel);
     };
   }, []);
 
@@ -82,7 +97,9 @@ export default function StatsDisplay() {
 
       <p className="mt-4 flex items-center justify-center gap-1.5 text-xs font-medium text-[#a890a0]">
         <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[var(--color-floral-sage)]" />
-        Mise à jour en temps réel
+        {isSupabaseConfigured()
+          ? "Mise à jour en temps réel"
+          : "Configuration Supabase manquante sur le serveur"}
       </p>
     </div>
   );

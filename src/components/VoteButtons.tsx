@@ -32,23 +32,30 @@ export default function VoteButtons({ onVoteSuccess, disabled }: VoteButtonsProp
   }, []);
 
   const fetchVote = useCallback(async () => {
-    const sessionId = getSessionId();
-    const res = await fetch(`/api/vote?session_id=${encodeURIComponent(sessionId)}`);
+    try {
+      const sessionId = getSessionId();
+      const res = await fetch(
+        `/api/vote?session_id=${encodeURIComponent(sessionId)}`
+      );
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data.vote && data.createdAt) {
-        applyVoteState({
-          choice: data.vote,
-          createdAt: data.createdAt,
-          canModify: data.canModify,
-          remainingMs: data.remainingMs,
-        });
-      } else {
-        setVote(null);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.vote && data.createdAt) {
+          applyVoteState({
+            choice: data.vote,
+            createdAt: data.createdAt,
+            canModify: data.canModify,
+            remainingMs: data.remainingMs,
+          });
+        } else {
+          setVote(null);
+        }
       }
+    } catch {
+      setError("Impossible de charger votre vote. Réessayez dans un instant.");
+    } finally {
+      setInitialLoading(false);
     }
-    setInitialLoading(false);
   }, [applyVoteState]);
 
   useEffect(() => {

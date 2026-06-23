@@ -30,7 +30,15 @@ export default function HomeContent() {
         setError("Impossible de charger la configuration. Rechargez la page.");
       }
     } catch {
-      setError("Connexion au serveur impossible. Vérifiez que npm run dev est lancé.");
+      const isLocal =
+        typeof window !== "undefined" &&
+        (window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1");
+      setError(
+        isLocal
+          ? "Connexion au serveur impossible. Vérifiez que npm run dev est lancé."
+          : "Connexion au serveur impossible. Réessayez dans quelques instants."
+      );
     }
     setLoading(false);
   }, []);
@@ -69,7 +77,8 @@ export default function HomeContent() {
   if (!reveal?.revealDate) {
     return (
       <p className="text-center font-medium text-red-500">
-        Configuration manquante : définissez NEXT_PUBLIC_REVEAL_DATE dans .env.local
+        Configuration manquante : vérifiez les variables d&apos;environnement sur Vercel
+        (NEXT_PUBLIC_REVEAL_DATE, Supabase…)
       </p>
     );
   }
@@ -88,8 +97,18 @@ export default function HomeContent() {
           <span className="text-[var(--color-title-sage)]">Garçon</span>
           <span className="text-[#5c4f56]"> ?</span>
         </h1>
-        <p className="mt-3 text-base font-medium text-[#8a7d84]">
-          Votez, suivez la tendance, et découvrez le verdict ensemble !
+        <p className="mx-auto mt-3 max-w-lg text-base font-medium leading-relaxed text-[#8a7d84]">
+          C&apos;est nous,{" "}
+          <span className="font-semibold text-[#5c4f56]">Orlane</span> et{" "}
+          <span className="font-semibold text-[#5c4f56]">Mérick</span> ! Vous avez
+          déjà eu la grande nouvelle&nbsp;: plutôt qu&apos;un gender reveal
+          classique, on a préparé cette page pour partager l&apos;attente avec
+          vous.
+        </p>
+        <p className="mx-auto mt-2 max-w-lg text-base font-medium leading-relaxed text-[#8a7d84]">
+          Pour l&apos;instant, nous n&apos;en savons pas plus que vous. Pas de
+          symptômes « révélateurs » à se mettre sous la dent, le suspense reste
+          entier pour tout le monde. Alors… fille ou garçon, vous pariez sur quoi&nbsp;?
         </p>
       </header>
 
