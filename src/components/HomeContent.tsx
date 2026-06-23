@@ -101,9 +101,9 @@ export default function HomeContent() {
           C&apos;est nous,{" "}
           <span className="font-semibold text-[#5c4f56]">Orlane</span> et{" "}
           <span className="font-semibold text-[#5c4f56]">Mérick</span> ! Vous avez
-          déjà eu la grande nouvelle&nbsp;: plutôt qu&apos;un gender reveal
-          classique, on a préparé cette page pour partager l&apos;attente avec
-          vous.
+          déjà eu la grande nouvelle et plutôt qu&apos;un gender reveal
+          classique, on a décidé de préparer cette page pour partager
+          l&apos;attente avec vous.
         </p>
         <p className="mx-auto mt-2 max-w-lg text-base font-medium leading-relaxed text-[#8a7d84]">
           Pour l&apos;instant, nous n&apos;en savons pas plus que vous. Pas de
