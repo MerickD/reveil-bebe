@@ -5,7 +5,6 @@ import Countdown from "@/components/Countdown";
 import VoteButtons from "@/components/VoteButtons";
 import StatsDisplay from "@/components/StatsDisplay";
 import RevealResult from "@/components/RevealResult";
-import ShareButtons from "@/components/ShareButtons";
 import type { VoteChoice } from "@/types/votes";
 
 interface RevealState {
@@ -124,7 +123,6 @@ export default function HomeContent() {
       )}
 
       <StatsDisplay />
-      <ShareButtons isRevealed={showResult} result={reveal.result} />
     </div>
   );
 }
