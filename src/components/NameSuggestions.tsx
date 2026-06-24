@@ -85,15 +85,7 @@ export default function NameSuggestions() {
     Boolean(normalizeVoterName(proposerName)) &&
     suggestedName.trim().length >= 2;
 
-  if (enabled === null) {
-    return (
-      <section className="glass-card flex min-h-[120px] items-center justify-center rounded-[1.75rem] p-5">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-floral-peach)]/40 border-t-[var(--color-floral-peach)]" />
-      </section>
-    );
-  }
-
-  if (!enabled) {
+  if (enabled === null || !enabled) {
     return null;
   }
 

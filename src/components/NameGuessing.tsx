@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getSessionId } from "@/lib/session";
 import type { MaskedNameVariant, NameSlot } from "@/lib/mystery-name-types";
 import type { VoteChoice } from "@/types/votes";
 
@@ -12,8 +11,6 @@ interface MysteryNameState {
   isFullyRevealed?: boolean;
   winningKey?: VoteChoice | null;
 }
-
-type GuessFeedback = "idle" | "wrong" | "correct" | "submitting";
 
 interface NameGuessingProps {
   className?: string;
@@ -112,8 +109,6 @@ function NameRow({
 export default function NameGuessing({ className = "" }: NameGuessingProps) {
   const [state, setState] = useState<MysteryNameState | null>(null);
   const [loading, setLoading] = useState(true);
-  const [guess, setGuess] = useState("");
-  const [feedback, setFeedback] = useState<GuessFeedback>("idle");
 
   const fetchMaskedName = useCallback(async () => {
     try {
@@ -134,36 +129,6 @@ export default function NameGuessing({ className = "" }: NameGuessingProps) {
   useEffect(() => {
     fetchMaskedName();
   }, [fetchMaskedName]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!guess.trim() || feedback === "submitting") return;
-
-    setFeedback("submitting");
-
-    try {
-      const res = await fetch("/api/mystery-name", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          guess: guess.trim(),
-          session_id: getSessionId(),
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.feedback === "correct") {
-        setFeedback("correct");
-      } else {
-        setFeedback("wrong");
-      }
-    } catch {
-      setFeedback("wrong");
-    }
-
-    window.setTimeout(() => setFeedback("idle"), 2800);
-  };
 
   if (loading) {
     return (
@@ -204,11 +169,10 @@ export default function NameGuessing({ className = "" }: NameGuessingProps) {
             id="mystery-name-title"
             className="mt-3 text-xl font-extrabold text-[#5c4f56] sm:text-2xl"
           >
-            Devinez son prénom
+            Son prénom se dévoile
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm font-medium leading-relaxed text-[#8a7d84]">
-            Revenez régulièrement : une nouvelle lettre pourra apparaître à tout
-            moment !
+            Revenez régulièrement : de nouvelles lettres pourront apparaître !
           </p>
         </div>
 
@@ -225,49 +189,6 @@ export default function NameGuessing({ className = "" }: NameGuessingProps) {
         <p className="mt-4 text-center text-xs font-semibold uppercase tracking-wider text-[#a890c0]">
           {progressLabel}
         </p>
-
-        <form
-          onSubmit={handleSubmit}
-          className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-stretch"
-        >
-          <label htmlFor="name-guess" className="sr-only">
-            Votre idée de prénom
-          </label>
-          <input
-            id="name-guess"
-            type="text"
-            value={guess}
-            onChange={(e) => setGuess(e.target.value)}
-            placeholder="Votre idée de prénom…"
-            maxLength={40}
-            disabled={feedback === "submitting"}
-            className="min-h-11 flex-1 rounded-xl border border-[#e0d4f0] bg-white/90 px-4 text-base font-medium text-[#5c4f56] placeholder:text-[#b8a8b4] outline-none ring-[var(--color-floral-lavender)] focus:ring-2 disabled:opacity-60"
-          />
-          <button
-            type="submit"
-            disabled={guess.trim().length < 2 || feedback === "submitting"}
-            className="min-h-11 shrink-0 rounded-xl bg-[var(--color-floral-lavender)] px-5 text-sm font-bold text-white shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {feedback === "submitting" ? "…" : "Tenter"}
-          </button>
-        </form>
-
-        {feedback === "wrong" && (
-          <p
-            className="mt-3 animate-reveal text-center text-sm font-bold text-[var(--color-floral-rose)]"
-            role="status"
-          >
-            Pas tout à fait… On verra bien ! 😉
-          </p>
-        )}
-        {feedback === "correct" && (
-          <p
-            className="mt-3 animate-reveal text-center text-sm font-bold text-[var(--color-floral-sage-dark)]"
-            role="status"
-          >
-            Bravo, vous avez trouvé ! 🎉
-          </p>
-        )}
       </div>
     </section>
   );
