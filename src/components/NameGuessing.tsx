@@ -179,8 +179,6 @@ export default function NameGuessing({ className = "" }: NameGuessingProps) {
     return null;
   }
 
-  const isSingle = state.displayMode === "single";
-
   const progressLabel = state.isFullyRevealed
     ? "Toutes les lettres sont dévoilées !"
     : "Revenez bientôt — de nouvelles lettres pourraient apparaître…";
@@ -206,12 +204,11 @@ export default function NameGuessing({ className = "" }: NameGuessingProps) {
             id="mystery-name-title"
             className="mt-3 text-xl font-extrabold text-[#5c4f56] sm:text-2xl"
           >
-            {isSingle ? "Devinez son prénom" : "Devinez le prénom mystère"}
+            Devinez son prénom
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm font-medium leading-relaxed text-[#8a7d84]">
-            {isSingle
-              ? "Revenez régulièrement : une nouvelle lettre pourra apparaître à tout moment !"
-              : "Deux prénoms possibles selon le sexe du bébé. Revenez chaque semaine — une lettre pourrait bien se dévoiler…"}
+            Revenez régulièrement : une nouvelle lettre pourra apparaître à tout
+            moment !
           </p>
         </div>
 
@@ -220,11 +217,7 @@ export default function NameGuessing({ className = "" }: NameGuessingProps) {
             <NameRow
               key={variant.key}
               variant={variant}
-              isWinner={
-                isSingle ||
-                (Boolean(state.isFullyRevealed) &&
-                  state.winningKey === variant.key)
-              }
+              isWinner
             />
           ))}
         </div>

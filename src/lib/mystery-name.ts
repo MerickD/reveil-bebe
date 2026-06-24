@@ -3,8 +3,8 @@ import "server-only";
 import { getRevealConfig } from "@/lib/reveal";
 import {
   getNameGameStoredState,
+  getActiveNameKey,
   saveNameGameStoredState,
-  shouldShowSingleName,
 } from "@/lib/name-game-store";
 import {
   computeMaskedNameFromIndices,
@@ -35,35 +35,25 @@ export {
 } from "@/lib/mystery-name-utils";
 
 const VARIANT_META: Record<VoteChoice, { label: string; emoji: string }> = {
-  fille: { label: "Si c'est une fille", emoji: "🌸" },
-  garcon: { label: "Si c'est un garçon", emoji: "🌿" },
+  fille: { label: "Son prénom", emoji: "🌸" },
+  garcon: { label: "Son prénom", emoji: "🌿" },
 };
 
-const SINGLE_VARIANT_META: Record<VoteChoice, { label: string; emoji: string }> =
-  {
-    fille: { label: "Son prénom", emoji: "🌸" },
-    garcon: { label: "Son prénom", emoji: "🌿" },
-  };
-
-function buildVariants(config: MysteryNameConfig): MysteryNameGameState {
-  const filleMasked = computeMaskedNameFromIndices(
-    config.names.fille,
-    config.revealedLetters.fille
-  );
-  const garconMasked = computeMaskedNameFromIndices(
-    config.names.garcon,
-    config.revealedLetters.garcon
+function buildVariantForKey(
+  config: MysteryNameConfig,
+  key: VoteChoice
+): MysteryNameGameState {
+  const masked = computeMaskedNameFromIndices(
+    config.names[key],
+    config.revealedLetters[key]
   );
 
   return {
     enabled: true,
-    displayMode: "dual",
-    variants: [
-      { key: "fille", ...VARIANT_META.fille, ...filleMasked },
-      { key: "garcon", ...VARIANT_META.garcon, ...garconMasked },
-    ],
-    isFullyRevealed: filleMasked.isFullyRevealed && garconMasked.isFullyRevealed,
-    winningKey: null,
+    displayMode: "single",
+    variants: [{ key, ...VARIANT_META[key], ...masked }],
+    isFullyRevealed: masked.isFullyRevealed,
+    winningKey: key,
   };
 }
 
@@ -116,24 +106,12 @@ export async function getMaskedNameState(): Promise<
 > {
   const revealConfig = await getRevealConfig();
   if (!revealConfig?.nameGameEnabled) return { enabled: false };
+  if (!getActiveNameKey(revealConfig.result)) return { enabled: false };
 
   const config = await getMysteryNameConfig();
   if (!config) return { enabled: false };
 
-  const state = buildVariants(config);
-
-  if (shouldShowSingleName(config, revealConfig.result)) {
-    const winner = revealConfig.result;
-    const winnerVariant = state.variants.find((v) => v.key === winner);
-    if (!winnerVariant) return { enabled: false };
-
-    state.displayMode = "single";
-    state.variants = [{ ...winnerVariant, ...SINGLE_VARIANT_META[winner] }];
-    state.winningKey = winner;
-    state.isFullyRevealed = winnerVariant.isFullyRevealed;
-  }
-
-  return state;
+  return buildVariantForKey(config, revealConfig.result);
 }
 
 export async function checkNameGuess(
@@ -154,7 +132,7 @@ export async function checkNameGuess(
   const normalizedGuess = normalizeGuess(guess);
   if (!normalizedGuess) return { feedback: "wrong", saved: false };
 
-  const winningKey = shouldShowSingleName(config, revealConfig.result)
+  const winningKey = getActiveNameKey(revealConfig.result)
     ? revealConfig.result
     : null;
 

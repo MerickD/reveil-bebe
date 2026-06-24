@@ -29,7 +29,6 @@ export async function GET() {
     result: config.result,
     nameGameEnabled: config.nameGameEnabled,
     nameSuggestionsEnabled: config.nameSuggestionsEnabled,
-    nameGameWinnerOnly: mystery?.winnerOnly ?? false,
     source: config.source,
     names: mystery?.names ?? null,
     revealedLetters: mystery?.revealedLetters ?? { fille: [], garcon: [] },
@@ -47,7 +46,6 @@ export async function PUT(request: Request) {
     result,
     nameGameEnabled,
     nameSuggestionsEnabled,
-    nameGameWinnerOnly,
     revealedLetters,
   } = body;
 
@@ -82,13 +80,6 @@ export async function PUT(request: Request) {
     );
   }
 
-  if (nameGameWinnerOnly !== undefined && typeof nameGameWinnerOnly !== "boolean") {
-    return NextResponse.json(
-      { error: "nameGameWinnerOnly doit être un booléen" },
-      { status: 400 }
-    );
-  }
-
   const update = await updateRevealConfig(revealDate, result as VoteChoice | null, {
     nameGameEnabled,
     nameSuggestionsEnabled,
@@ -98,7 +89,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: update.error }, { status: 500 });
   }
 
-  if (revealedLetters !== undefined || nameGameWinnerOnly !== undefined) {
+  if (revealedLetters !== undefined) {
     const mystery = await getMysteryNameConfig();
     if (!mystery) {
       return NextResponse.json(
@@ -110,13 +101,10 @@ export async function PUT(request: Request) {
     const fille = parseRevealedIndices(revealedLetters?.fille ?? mystery.revealedLetters.fille);
     const garcon = parseRevealedIndices(revealedLetters?.garcon ?? mystery.revealedLetters.garcon);
 
-    const lettersUpdate = await updateRevealedLetters(
-      {
-        fille: sanitizeRevealedIndices(mystery.names.fille, fille),
-        garcon: sanitizeRevealedIndices(mystery.names.garcon, garcon),
-      },
-      typeof nameGameWinnerOnly === "boolean" ? nameGameWinnerOnly : mystery.winnerOnly
-    );
+    const lettersUpdate = await updateRevealedLetters({
+      fille: sanitizeRevealedIndices(mystery.names.fille, fille),
+      garcon: sanitizeRevealedIndices(mystery.names.garcon, garcon),
+    });
 
     if (!lettersUpdate.ok) {
       return NextResponse.json({ error: lettersUpdate.error }, { status: 500 });

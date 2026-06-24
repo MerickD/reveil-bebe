@@ -46,7 +46,6 @@ export default function AdminPanel() {
   const [result, setResult] = useState<VoteChoice | "">("");
   const [nameGameEnabled, setNameGameEnabled] = useState(false);
   const [nameSuggestionsEnabled, setNameSuggestionsEnabled] = useState(false);
-  const [nameGameWinnerOnly, setNameGameWinnerOnly] = useState(false);
   const [names, setNames] = useState<{ fille: string; garcon: string } | null>(
     null
   );
@@ -94,7 +93,6 @@ export default function AdminPanel() {
           setResult(data.result ?? "");
           setNameGameEnabled(data.nameGameEnabled === true);
           setNameSuggestionsEnabled(data.nameSuggestionsEnabled === true);
-          setNameGameWinnerOnly(data.nameGameWinnerOnly === true);
           setNames(data.names ?? null);
           setRevealedLetters(
             data.revealedLetters ?? { fille: [], garcon: [] }
@@ -166,7 +164,6 @@ export default function AdminPanel() {
           result: result === "" ? null : result,
           nameGameEnabled,
           nameSuggestionsEnabled,
-          nameGameWinnerOnly,
           revealedLetters,
         }),
       });
@@ -306,8 +303,8 @@ export default function AdminPanel() {
             <option value="garcon">🌿 Garçon</option>
           </select>
           <p className="mt-1.5 text-xs leading-relaxed text-[#8a7d84]">
-            Annonce uniquement le sexe du bébé — le prénom reste géré
-            séparément dans le jeu des lettres ci-dessous.
+            Définit le sexe du bébé et le prénom affiché dans le jeu (fille ou
+            garçon — un seul prénom visible aux visiteurs).
           </p>
         </div>
 
@@ -324,8 +321,9 @@ export default function AdminPanel() {
                 Activer le jeu du prénom
               </span>
               <span className="mt-1 block text-xs leading-relaxed text-[#8a7d84]">
-                Le jeu s&apos;affiche dès que cette case est cochée, indépendamment
-                du compte à rebours. Au départ, aucune lettre n&apos;est visible.
+                Affiche le prénom correspondant au résultat fille/garçon
+                ci-dessus. Nécessite un résultat défini. Indépendant du compte
+                à rebours — au départ, aucune lettre n&apos;est visible.
               </span>
             </span>
           </label>
@@ -351,59 +349,46 @@ export default function AdminPanel() {
           </label>
         </div>
 
-        {nameGameEnabled && (
-          <div className="rounded-2xl border border-[#e0d4f0] bg-white/80 p-4">
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={nameGameWinnerOnly}
-                onChange={(e) => setNameGameWinnerOnly(e.target.checked)}
-                disabled={!result}
-                className="mt-1 h-4 w-4 rounded border-[#d8cce8] text-[var(--color-floral-lavender)] focus:ring-[var(--color-floral-lavender)] disabled:opacity-40"
-              />
-              <span>
-                <span className="block text-sm font-semibold text-[#5c4f56]">
-                  N&apos;afficher qu&apos;un seul prénom
-                </span>
-                <span className="mt-1 block text-xs leading-relaxed text-[#8a7d84]">
-                  Affiche uniquement le prénom lié au résultat fille/garçon.
-                  Indépendant du compte à rebours — activez quand vous voulez
-                  (nécessite un résultat défini ci-dessus).
-                </span>
-              </span>
-            </label>
-          </div>
+        {nameGameEnabled && !result && (
+          <p className="rounded-xl bg-[var(--color-floral-peach)]/30 px-4 py-3 text-sm text-[#8a7d84] ring-1 ring-[#f0cbb8]">
+            Choisissez d&apos;abord le résultat fille ou garçon pour afficher le
+            jeu du prénom aux visiteurs.
+          </p>
         )}
 
-        {nameGameEnabled && names && (
+        {nameGameEnabled && result && names && (
           <div className="flex flex-col gap-4">
             <p className="text-sm font-semibold text-[#5c4f56]">
               Lettres visibles sur le site
             </p>
             <p className="text-xs leading-relaxed text-[#8a7d84]">
-              Cliquez sur une lettre pour la révéler ou la masquer. Les visiteurs
-              ne voient que les lettres activées (les autres apparaissent en ?).
+              Prénom affiché aux visiteurs :{" "}
+              <strong>{result === "fille" ? "fille" : "garçon"}</strong>.
+              Cliquez sur une lettre pour la révéler ou la masquer.
             </p>
-            <AdminLetterPicker
-              name={names.fille}
-              label="Prénom fille"
-              emoji="🌸"
-              accent="fille"
-              indices={revealedLetters.fille}
-              onChange={(fille) =>
-                setRevealedLetters((prev) => ({ ...prev, fille }))
-              }
-            />
-            <AdminLetterPicker
-              name={names.garcon}
-              label="Prénom garçon"
-              emoji="🌿"
-              accent="garcon"
-              indices={revealedLetters.garcon}
-              onChange={(garcon) =>
-                setRevealedLetters((prev) => ({ ...prev, garcon }))
-              }
-            />
+            {result === "fille" ? (
+              <AdminLetterPicker
+                name={names.fille}
+                label="Prénom fille"
+                emoji="🌸"
+                accent="fille"
+                indices={revealedLetters.fille}
+                onChange={(fille) =>
+                  setRevealedLetters((prev) => ({ ...prev, fille }))
+                }
+              />
+            ) : (
+              <AdminLetterPicker
+                name={names.garcon}
+                label="Prénom garçon"
+                emoji="🌿"
+                accent="garcon"
+                indices={revealedLetters.garcon}
+                onChange={(garcon) =>
+                  setRevealedLetters((prev) => ({ ...prev, garcon }))
+                }
+              />
+            )}
           </div>
         )}
 

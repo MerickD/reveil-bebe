@@ -175,9 +175,16 @@ export async function saveNameGameStoredState(
   return { ok: true };
 }
 
-export function shouldShowSingleName(
-  stored: NameGameStoredState,
+export function getActiveNameKey(
   result: VoteChoice | null
 ): result is VoteChoice {
-  return stored.winnerOnly && result !== null;
+  return result === "fille" || result === "garcon";
+}
+
+/** @deprecated Utiliser getActiveNameKey — le jeu n'affiche qu'un prénom selon le sexe. */
+export function shouldShowSingleName(
+  _stored: NameGameStoredState,
+  result: VoteChoice | null
+): result is VoteChoice {
+  return getActiveNameKey(result);
 }
