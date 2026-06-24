@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Countdown from "@/components/Countdown";
+import NameGuessing from "@/components/NameGuessing";
+import NameSuggestions from "@/components/NameSuggestions";
 import VoteButtons from "@/components/VoteButtons";
 import StatsDisplay from "@/components/StatsDisplay";
 import RevealResult from "@/components/RevealResult";
@@ -110,6 +112,11 @@ export default function HomeContent() {
           entier pour tout le monde. Alors… fille ou garçon, vous pariez sur quoi&nbsp;?
         </p>
       </header>
+
+      {/* Jeu du prénom — au-dessus des votes */}
+      <NameGuessing />
+
+      <NameSuggestions />
 
       {/* Vote en premier — élément principal */}
       {!showResult && <VoteButtons disabled={showResult} />}

@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --hostname 0.0.0.0",
+    "dev": "next dev --hostname 127.0.0.1 -p 3000",
+    "dev:clean": "rm -rf .next && next dev --hostname 127.0.0.1 -p 3000",
+    "dev:reset": "lsof -ti :3000 | xargs kill -9 2>/dev/null; rm -rf .next && next dev --hostname 127.0.0.1 -p 3000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -12,7 +14,8 @@
     "@supabase/supabase-js": "^2.49.1",
     "next": "^15.2.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

@@ -4,7 +4,22 @@ import type { VoteChoice } from "@/types/votes";
 export interface RevealConfig {
   revealDate: string;
   result: VoteChoice | null;
+  nameGameEnabled: boolean;
+  nameSuggestionsEnabled: boolean;
   source: "supabase" | "env";
+}
+
+export interface RevealFeatureToggles {
+  nameGameEnabled?: boolean;
+  nameSuggestionsEnabled?: boolean;
+}
+
+function isMissingColumnError(message: string): boolean {
+  return (
+    message.includes("schema cache") ||
+    message.includes("does not exist") ||
+    message.includes("Could not find")
+  );
 }
 
 export interface RevealState extends RevealConfig {
@@ -15,19 +30,38 @@ async function getFromSupabase(): Promise<RevealConfig | null> {
   const supabase = createServiceClient();
   if (!supabase) return null;
 
-  const { data, error } = await supabase
-    .from("reveal_settings")
-    .select("reveal_at, result")
-    .eq("id", 1)
-    .single();
+  const columnSets = [
+    "reveal_at, result, name_game_enabled, name_suggestions_enabled",
+    "reveal_at, result, name_game_enabled",
+    "reveal_at, result",
+  ];
 
-  if (error || !data) return null;
+  for (const columns of columnSets) {
+    const { data, error } = await supabase
+      .from("reveal_settings")
+      .select(columns)
+      .eq("id", 1)
+      .single();
 
-  return {
-    revealDate: data.reveal_at,
-    result: data.result as VoteChoice | null,
-    source: "supabase",
-  };
+    if (!error && data) {
+      const row = data as unknown as {
+        reveal_at: string;
+        result: VoteChoice | null;
+        name_game_enabled?: boolean;
+        name_suggestions_enabled?: boolean;
+      };
+
+      return {
+        revealDate: row.reveal_at,
+        result: row.result,
+        nameGameEnabled: Boolean(row.name_game_enabled),
+        nameSuggestionsEnabled: Boolean(row.name_suggestions_enabled),
+        source: "supabase",
+      };
+    }
+  }
+
+  return null;
 }
 
 function getFromEnv(): RevealConfig | null {
@@ -38,7 +72,17 @@ function getFromEnv(): RevealConfig | null {
   const result =
     raw === "fille" || raw === "garcon" ? (raw as VoteChoice) : null;
 
-  return { revealDate, result, source: "env" };
+  const nameGameEnabled = process.env.NAME_GAME_ENABLED === "true";
+  const nameSuggestionsEnabled =
+    process.env.NAME_SUGGESTIONS_ENABLED === "true";
+
+  return {
+    revealDate,
+    result,
+    nameGameEnabled,
+    nameSuggestionsEnabled,
+    source: "env",
+  };
 }
 
 export async function getRevealConfig(): Promise<RevealConfig | null> {
@@ -59,23 +103,61 @@ export async function getRevealState(): Promise<RevealState | null> {
 
 export async function updateRevealConfig(
   revealDate: string,
-  result: VoteChoice | null
-): Promise<{ ok: boolean; error?: string }> {
+  result: VoteChoice | null,
+  toggles?: RevealFeatureToggles
+): Promise<{ ok: boolean; error?: string; warning?: string }> {
   const supabase = createServiceClient();
   if (!supabase) {
     return { ok: false, error: "SUPABASE_SERVICE_ROLE_KEY non configurée" };
   }
 
-  const { error } = await supabase.from("reveal_settings").upsert(
-    {
-      id: 1,
-      reveal_at: revealDate,
-      result,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "id" }
-  );
+  const row: Record<string, unknown> = {
+    id: 1,
+    reveal_at: revealDate,
+    result,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (toggles?.nameGameEnabled !== undefined) {
+    row.name_game_enabled = toggles.nameGameEnabled;
+  }
+  if (toggles?.nameSuggestionsEnabled !== undefined) {
+    row.name_suggestions_enabled = toggles.nameSuggestionsEnabled;
+  }
+
+  let { error } = await supabase
+    .from("reveal_settings")
+    .upsert(row, { onConflict: "id" });
+
+  const warnings: string[] = [];
+
+  if (error && toggles?.nameSuggestionsEnabled !== undefined) {
+    delete row.name_suggestions_enabled;
+    ({ error } = await supabase
+      .from("reveal_settings")
+      .upsert(row, { onConflict: "id" }));
+    if (!error) {
+      warnings.push(
+        "Colonne name_suggestions_enabled absente — exécutez supabase/migration-name-suggestions.sql"
+      );
+    }
+  }
+
+  if (error && toggles?.nameGameEnabled !== undefined) {
+    delete row.name_game_enabled;
+    ({ error } = await supabase
+      .from("reveal_settings")
+      .upsert(row, { onConflict: "id" }));
+  }
+
+  if (error && isMissingColumnError(error.message)) {
+    delete row.name_game_enabled;
+    delete row.name_suggestions_enabled;
+    ({ error } = await supabase
+      .from("reveal_settings")
+      .upsert(row, { onConflict: "id" }));
+  }
 
   if (error) return { ok: false, error: error.message };
-  return { ok: true };
+  return { ok: true, warning: warnings[0] };
 }
