@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   title: "Fille ou Garçon ? — Révélation Bébé",
   description:
     "Votez Team Fille ou Team Garçon et suivez la tendance en temps réel avant la grande révélation !",
+  metadataBase: process.env.NEXT_PUBLIC_SITE_URL
+    ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+    : undefined,
 };
 
 export const viewport: Viewport = {

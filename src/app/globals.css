@@ -194,3 +194,36 @@ body { min-height: 100dvh; }
   will-change: transform, opacity;
   filter: blur(0px);
 }
+
+/* —— Jour J : révélation —— */
+body.reveal-day .bg-mesh::before,
+body.reveal-day .bg-mesh::after {
+  opacity: 0.58;
+  animation-duration: 9s;
+}
+
+body.reveal-day-fille .bg-mesh::before {
+  opacity: 0.72;
+}
+
+body.reveal-day-garcon .bg-mesh::after {
+  opacity: 0.72;
+}
+
+.reveal-day-content {
+  animation: reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.reveal-day-card {
+  box-shadow:
+    0 8px 40px rgba(82, 163, 82, 0.12),
+    0 4px 24px rgba(224, 86, 122, 0.1);
+}
+
+body.reveal-day-fille .reveal-day-card {
+  box-shadow: 0 8px 40px rgba(224, 86, 122, 0.18);
+}
+
+body.reveal-day-garcon .reveal-day-card {
+  box-shadow: 0 8px 40px rgba(82, 163, 82, 0.18);
+}
