@@ -30,6 +30,7 @@ export async function GET() {
     nameGameEnabled: config.nameGameEnabled,
     nameSuggestionsEnabled: config.nameSuggestionsEnabled,
     notificationsEnabled: config.notificationsEnabled,
+    birthListEnabled: config.birthListEnabled,
     source: config.source,
     names: mystery?.names ?? null,
     revealedLetters: mystery?.revealedLetters ?? { fille: [], garcon: [] },
@@ -48,6 +49,7 @@ export async function PUT(request: Request) {
     nameGameEnabled,
     nameSuggestionsEnabled,
     notificationsEnabled,
+    birthListEnabled,
     revealedLetters,
   } = body;
 
@@ -92,10 +94,18 @@ export async function PUT(request: Request) {
     );
   }
 
+  if (birthListEnabled !== undefined && typeof birthListEnabled !== "boolean") {
+    return NextResponse.json(
+      { error: "birthListEnabled doit être un booléen" },
+      { status: 400 }
+    );
+  }
+
   const update = await updateRevealConfig(revealDate, result as VoteChoice | null, {
     nameGameEnabled,
     nameSuggestionsEnabled,
     notificationsEnabled,
+    birthListEnabled,
   });
 
   if (!update.ok) {

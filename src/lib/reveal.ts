@@ -7,6 +7,7 @@ export interface RevealConfig {
   nameGameEnabled: boolean;
   nameSuggestionsEnabled: boolean;
   notificationsEnabled: boolean;
+  birthListEnabled: boolean;
   source: "supabase" | "env";
 }
 
@@ -14,6 +15,7 @@ export interface RevealFeatureToggles {
   nameGameEnabled?: boolean;
   nameSuggestionsEnabled?: boolean;
   notificationsEnabled?: boolean;
+  birthListEnabled?: boolean;
 }
 
 function isMissingColumnError(message: string): boolean {
@@ -33,6 +35,7 @@ async function getFromSupabase(): Promise<RevealConfig | null> {
   if (!supabase) return null;
 
   const columnSets = [
+    "reveal_at, result, name_game_enabled, name_suggestions_enabled, notifications_enabled, birth_list_enabled",
     "reveal_at, result, name_game_enabled, name_suggestions_enabled, notifications_enabled",
     "reveal_at, result, name_game_enabled, name_suggestions_enabled",
     "reveal_at, result, name_game_enabled",
@@ -53,6 +56,7 @@ async function getFromSupabase(): Promise<RevealConfig | null> {
         name_game_enabled?: boolean;
         name_suggestions_enabled?: boolean;
         notifications_enabled?: boolean;
+        birth_list_enabled?: boolean;
       };
 
       return {
@@ -61,6 +65,7 @@ async function getFromSupabase(): Promise<RevealConfig | null> {
         nameGameEnabled: Boolean(row.name_game_enabled),
         nameSuggestionsEnabled: Boolean(row.name_suggestions_enabled),
         notificationsEnabled: Boolean(row.notifications_enabled),
+        birthListEnabled: Boolean(row.birth_list_enabled),
         source: "supabase",
       };
     }
@@ -81,6 +86,7 @@ function getFromEnv(): RevealConfig | null {
   const nameSuggestionsEnabled =
     process.env.NAME_SUGGESTIONS_ENABLED === "true";
   const notificationsEnabled = process.env.NOTIFICATIONS_ENABLED === "true";
+  const birthListEnabled = process.env.BIRTH_LIST_ENABLED === "true";
 
   return {
     revealDate,
@@ -88,6 +94,7 @@ function getFromEnv(): RevealConfig | null {
     nameGameEnabled,
     nameSuggestionsEnabled,
     notificationsEnabled,
+    birthListEnabled,
     source: "env",
   };
 }
@@ -134,12 +141,27 @@ export async function updateRevealConfig(
   if (toggles?.notificationsEnabled !== undefined) {
     row.notifications_enabled = toggles.notificationsEnabled;
   }
+  if (toggles?.birthListEnabled !== undefined) {
+    row.birth_list_enabled = toggles.birthListEnabled;
+  }
 
   let { error } = await supabase
     .from("reveal_settings")
     .upsert(row, { onConflict: "id" });
 
   const warnings: string[] = [];
+
+  if (error && toggles?.birthListEnabled !== undefined) {
+    delete row.birth_list_enabled;
+    ({ error } = await supabase
+      .from("reveal_settings")
+      .upsert(row, { onConflict: "id" }));
+    if (!error) {
+      warnings.push(
+        "Colonne birth_list_enabled absente — exécutez supabase/migration-birth-list.sql"
+      );
+    }
+  }
 
   if (error && toggles?.notificationsEnabled !== undefined) {
     delete row.notifications_enabled;
@@ -176,6 +198,7 @@ export async function updateRevealConfig(
     delete row.name_game_enabled;
     delete row.name_suggestions_enabled;
     delete row.notifications_enabled;
+    delete row.birth_list_enabled;
     ({ error } = await supabase
       .from("reveal_settings")
       .upsert(row, { onConflict: "id" }));

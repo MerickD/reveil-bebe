@@ -15,5 +15,6 @@ export async function GET() {
     isRevealed: state.isRevealed,
     revealDate: state.revealDate,
     result: state.isRevealed ? state.result : null,
+    birthListEnabled: state.birthListEnabled,
   });
 }

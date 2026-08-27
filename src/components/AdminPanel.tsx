@@ -47,6 +47,7 @@ export default function AdminPanel() {
   const [nameGameEnabled, setNameGameEnabled] = useState(false);
   const [nameSuggestionsEnabled, setNameSuggestionsEnabled] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [birthListEnabled, setBirthListEnabled] = useState(false);
   const [names, setNames] = useState<{ fille: string; garcon: string } | null>(
     null
   );
@@ -101,6 +102,7 @@ export default function AdminPanel() {
           setNameGameEnabled(data.nameGameEnabled === true);
           setNameSuggestionsEnabled(data.nameSuggestionsEnabled === true);
           setNotificationsEnabled(data.notificationsEnabled === true);
+          setBirthListEnabled(data.birthListEnabled === true);
           setNames(data.names ?? null);
           setRevealedLetters(
             data.revealedLetters ?? { fille: [], garcon: [] }
@@ -184,6 +186,7 @@ export default function AdminPanel() {
           nameGameEnabled,
           nameSuggestionsEnabled,
           notificationsEnabled,
+          birthListEnabled,
           revealedLetters,
         }),
       });
@@ -385,6 +388,26 @@ export default function AdminPanel() {
                 Affiche le formulaire « Recevoir les nouveautés ». Vous
                 envoyez ensuite un message à tous les inscrits depuis cette
                 page, quand vous le souhaitez.
+              </span>
+            </span>
+          </label>
+        </div>
+
+        <div className="rounded-2xl border border-[#e0d4f0] bg-[var(--color-floral-sage-light)]/50 p-4">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={birthListEnabled}
+              onChange={(e) => setBirthListEnabled(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-[var(--color-floral-sage-ring)] text-[var(--color-floral-sage)] focus:ring-[var(--color-floral-sage)]"
+            />
+            <span>
+              <span className="block text-sm font-semibold text-[#5c4f56]">
+                Afficher la liste de naissance
+              </span>
+              <span className="mt-1 block text-xs leading-relaxed text-[#8a7d84]">
+                Affiche le lien vers Minipouce sur la page d&apos;accueil.
+                Indépendant du compte à rebours.
               </span>
             </span>
           </label>

@@ -1,6 +1,34 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+
 const BIRTH_LIST_URL = "https://www.minipouce.fr/orlanegarcianne";
 
 export default function BirthListCard() {
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+
+  const fetchEnabled = useCallback(async () => {
+    try {
+      const res = await fetch("/api/reveal");
+      if (res.ok) {
+        const data = await res.json();
+        setEnabled(data.birthListEnabled === true);
+      } else {
+        setEnabled(false);
+      }
+    } catch {
+      setEnabled(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEnabled();
+  }, [fetchEnabled]);
+
+  if (enabled === null || !enabled) {
+    return null;
+  }
+
   return (
     <section
       className="glass-card relative overflow-hidden rounded-[1.75rem] p-5 text-center sm:p-7"

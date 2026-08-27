@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerClient } from "@/lib/supabase/server";
+import { getRevealState } from "@/lib/reveal";
 import {
   canModifyVote,
   getRemainingEditMs,
@@ -22,6 +23,17 @@ function buildVoteResponse(choice: VoteChoice, createdAt: string) {
     remainingMs: getRemainingEditMs(createdAt),
     editWindowMs: VOTE_EDIT_WINDOW_MS,
   };
+}
+
+async function votingClosedResponse() {
+  const state = await getRevealState();
+  if (state?.isRevealed) {
+    return NextResponse.json(
+      { error: "Les votes sont clos — la révélation a eu lieu." },
+      { status: 403 }
+    );
+  }
+  return null;
 }
 
 export async function GET(request: Request) {
@@ -52,6 +64,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const closed = await votingClosedResponse();
+  if (closed) return closed;
+
   const body = await request.json();
   const { session_id: sessionId, choice, voter_name: voterNameRaw } = body;
   const voterName = normalizeVoterName(voterNameRaw);
@@ -83,6 +98,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const closed = await votingClosedResponse();
+  if (closed) return closed;
+
   const body = await request.json();
   const { session_id: sessionId, choice } = body;
 
