@@ -9,6 +9,7 @@ import BirthListCard from "@/components/BirthListCard";
 import VoteButtons from "@/components/VoteButtons";
 import StatsDisplay from "@/components/StatsDisplay";
 import RevealResult from "@/components/RevealResult";
+import RevealShare from "@/components/RevealShare";
 import type { VoteChoice } from "@/types/votes";
 
 interface RevealState {
@@ -172,12 +173,18 @@ export default function HomeContent() {
           <RevealResult result={reveal.result!} />
           <BirthListCard />
           <NameGuessing />
-          <NotifySignup />
           <NameSuggestions />
+          <NotifySignup />
         </>
       )}
 
       <StatsDisplay />
+
+      {showResult && reveal.result ? (
+        <section className="glass-card relative overflow-hidden rounded-[1.75rem] p-5 sm:p-7">
+          <RevealShare result={reveal.result} />
+        </section>
+      ) : null}
     </div>
   );
 }

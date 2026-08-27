@@ -44,7 +44,7 @@ export default function RevealShare({ result }: RevealShareProps) {
     typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   return (
-    <div className="mt-6 flex flex-col gap-3">
+    <div className="flex flex-col gap-3">
       <p className="text-center text-xs font-bold uppercase tracking-widest text-[#a890c0]">
         Partager la nouvelle
       </p>

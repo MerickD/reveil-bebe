@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import VoteFlowerBurst from "@/components/VoteFlowerBurst";
-import RevealShare from "@/components/RevealShare";
 import { getStoredVote, getStoredVoterName } from "@/lib/session";
 import { getRevealEmoji } from "@/lib/reveal-share";
 import type { VoteChoice } from "@/types/votes";
@@ -125,7 +124,6 @@ export default function RevealResult({ result }: RevealResultProps) {
         <NameSuggestionHint />
 
         <CorrectVoteBadge result={result} />
-        <RevealShare result={result} />
       </div>
     </>
   );
