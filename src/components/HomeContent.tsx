@@ -112,7 +112,7 @@ export default function HomeContent() {
             <p className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-[#a890c0] shadow-sm ring-1 ring-[#e0d4f0] animate-reveal">
               <span className="text-base">🎉</span> Le grand jour est arrivé
             </p>
-            <h1 className="font-scratch animate-reveal text-4xl leading-none sm:text-5xl">
+            <h1 className="font-scratch animate-reveal text-5xl leading-[0.95] sm:text-7xl">
               <span
                 className={
                   reveal.result === "fille"
@@ -165,17 +165,17 @@ export default function HomeContent() {
           <div className="glass-card rounded-3xl p-5 sm:p-6">
             <Countdown targetDate={reveal.revealDate} onComplete={fetchReveal} />
           </div>
+          <BirthListCard />
         </>
       ) : (
         <>
           <RevealResult result={reveal.result!} />
+          <BirthListCard />
           <NameGuessing />
-          <NameSuggestions />
           <NotifySignup />
+          <NameSuggestions />
         </>
       )}
-
-      <BirthListCard />
 
       <StatsDisplay />
     </div>
