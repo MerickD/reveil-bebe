@@ -29,6 +29,7 @@ export async function GET() {
     result: config.result,
     nameGameEnabled: config.nameGameEnabled,
     nameSuggestionsEnabled: config.nameSuggestionsEnabled,
+    notificationsEnabled: config.notificationsEnabled,
     source: config.source,
     names: mystery?.names ?? null,
     revealedLetters: mystery?.revealedLetters ?? { fille: [], garcon: [] },
@@ -46,6 +47,7 @@ export async function PUT(request: Request) {
     result,
     nameGameEnabled,
     nameSuggestionsEnabled,
+    notificationsEnabled,
     revealedLetters,
   } = body;
 
@@ -80,9 +82,20 @@ export async function PUT(request: Request) {
     );
   }
 
+  if (
+    notificationsEnabled !== undefined &&
+    typeof notificationsEnabled !== "boolean"
+  ) {
+    return NextResponse.json(
+      { error: "notificationsEnabled doit être un booléen" },
+      { status: 400 }
+    );
+  }
+
   const update = await updateRevealConfig(revealDate, result as VoteChoice | null, {
     nameGameEnabled,
     nameSuggestionsEnabled,
+    notificationsEnabled,
   });
 
   if (!update.ok) {
