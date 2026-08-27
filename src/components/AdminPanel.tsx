@@ -46,7 +46,6 @@ export default function AdminPanel() {
   const [result, setResult] = useState<VoteChoice | "">("");
   const [nameGameEnabled, setNameGameEnabled] = useState(false);
   const [nameSuggestionsEnabled, setNameSuggestionsEnabled] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [birthListEnabled, setBirthListEnabled] = useState(false);
   const [names, setNames] = useState<{ fille: string; garcon: string } | null>(
     null
@@ -61,12 +60,6 @@ export default function AdminPanel() {
   const [saving, setSaving] = useState(false);
   const [suggestions, setSuggestions] = useState<NameSuggestionRow[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
-  const [subscriberCount, setSubscriberCount] = useState(0);
-  const [emailConfigured, setEmailConfigured] = useState(false);
-  const [notifySubject, setNotifySubject] = useState("");
-  const [notifyMessage, setNotifyMessage] = useState("");
-  const [notifySending, setNotifySending] = useState(false);
-  const [notifyFeedback, setNotifyFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/login")
@@ -101,7 +94,6 @@ export default function AdminPanel() {
           setResult(data.result ?? "");
           setNameGameEnabled(data.nameGameEnabled === true);
           setNameSuggestionsEnabled(data.nameSuggestionsEnabled === true);
-          setNotificationsEnabled(data.notificationsEnabled === true);
           setBirthListEnabled(data.birthListEnabled === true);
           setNames(data.names ?? null);
           setRevealedLetters(
@@ -128,17 +120,6 @@ export default function AdminPanel() {
       .then((data) => setSuggestions(data.suggestions ?? []))
       .catch(() => setSuggestions([]))
       .finally(() => setSuggestionsLoading(false));
-
-    fetch("/api/admin/notifications")
-      .then((r) => r.json())
-      .then((data) => {
-        setSubscriberCount(data.count ?? 0);
-        setEmailConfigured(data.emailConfigured === true);
-      })
-      .catch(() => {
-        setSubscriberCount(0);
-        setEmailConfigured(false);
-      });
   }, [authenticated]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -185,7 +166,6 @@ export default function AdminPanel() {
           result: result === "" ? null : result,
           nameGameEnabled,
           nameSuggestionsEnabled,
-          notificationsEnabled,
           birthListEnabled,
           revealedLetters,
         }),
@@ -372,27 +352,6 @@ export default function AdminPanel() {
           </label>
         </div>
 
-        <div className="rounded-2xl border border-[#e0d4f0] bg-white/80 p-4">
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={notificationsEnabled}
-              onChange={(e) => setNotificationsEnabled(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-[#d8cce8] text-[var(--color-floral-lavender)] focus:ring-[var(--color-floral-lavender)]"
-            />
-            <span>
-              <span className="block text-sm font-semibold text-[#5c4f56]">
-                Activer les notifications email
-              </span>
-              <span className="mt-1 block text-xs leading-relaxed text-[#8a7d84]">
-                Affiche le formulaire « Recevoir les nouveautés ». Vous
-                envoyez ensuite un message à tous les inscrits depuis cette
-                page, quand vous le souhaitez.
-              </span>
-            </span>
-          </label>
-        </div>
-
         <div className="rounded-2xl border border-[#e0d4f0] bg-[var(--color-floral-sage-light)]/50 p-4">
           <label className="flex cursor-pointer items-start gap-3">
             <input
@@ -534,142 +493,12 @@ export default function AdminPanel() {
         )}
       </div>
 
-      <div className="rounded-2xl border border-[#e0d4f0] bg-white/80 p-4">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-[#5c4f56]">
-            Notifications email
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              fetch("/api/admin/notifications")
-                .then((r) => r.json())
-                .then((data) => {
-                  setSubscriberCount(data.count ?? 0);
-                  setEmailConfigured(data.emailConfigured === true);
-                });
-            }}
-            className="text-xs font-medium text-[#a890c0] underline hover:text-[var(--color-floral-rose)]"
-          >
-            Actualiser
-          </button>
-        </div>
-        <p className="mb-3 text-xs leading-relaxed text-[#8a7d84]">
-          {subscriberCount} personne{subscriberCount > 1 ? "s" : ""} inscrite
-          {subscriberCount > 1 ? "s" : ""}.
-          {!emailConfigured && (
-            <>
-              {" "}
-              Configurez{" "}
-              <code className="rounded bg-[var(--color-floral-lavender-light)] px-1">
-                RESEND_API_KEY
-              </code>{" "}
-              et{" "}
-              <code className="rounded bg-[var(--color-floral-lavender-light)] px-1">
-                RESEND_FROM_EMAIL
-              </code>{" "}
-              pour envoyer.
-            </>
-          )}
-        </p>
-        <div className="flex flex-col gap-3">
-          <div>
-            <label htmlFor="notify-subject" className={labelClass}>
-              Objet de l&apos;email
-            </label>
-            <input
-              id="notify-subject"
-              type="text"
-              value={notifySubject}
-              onChange={(e) => setNotifySubject(e.target.value)}
-              placeholder="Ex. Une nouvelle lettre est dévoilée !"
-              maxLength={120}
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label htmlFor="notify-message" className={labelClass}>
-              Message
-            </label>
-            <textarea
-              id="notify-message"
-              value={notifyMessage}
-              onChange={(e) => setNotifyMessage(e.target.value)}
-              placeholder="Écrivez votre message aux proches…"
-              rows={4}
-              maxLength={2000}
-              className={inputClass}
-            />
-          </div>
-          <button
-            type="button"
-            disabled={
-              notifySending ||
-              !emailConfigured ||
-              subscriberCount === 0 ||
-              notifySubject.trim().length < 3 ||
-              notifyMessage.trim().length < 10
-            }
-            onClick={async () => {
-              setNotifySending(true);
-              setNotifyFeedback(null);
-              try {
-                const res = await fetch("/api/admin/notifications", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    subject: notifySubject.trim(),
-                    message: notifyMessage.trim(),
-                  }),
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                  setNotifyFeedback(data.error ?? "Envoi impossible");
-                } else {
-                  setNotifyFeedback(
-                    data.warning
-                      ? `Envoyé à ${data.sent} personne(s). ${data.warning}`
-                      : `Envoyé à ${data.sent} personne(s) !`
-                  );
-                  setNotifySubject("");
-                  setNotifyMessage("");
-                }
-              } catch {
-                setNotifyFeedback("Erreur réseau lors de l'envoi");
-              } finally {
-                setNotifySending(false);
-              }
-            }}
-            className="rounded-xl bg-[var(--color-floral-lavender)] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {notifySending ? "Envoi…" : "Envoyer à tous les inscrits"}
-          </button>
-          {notifyFeedback && (
-            <p
-              className={`rounded-xl px-4 py-2 text-sm font-medium ${
-                notifyFeedback.includes("impossible") ||
-                notifyFeedback.includes("Erreur") ||
-                notifyFeedback.includes("échoué")
-                  ? "bg-[var(--color-floral-rose-light)]/50 text-[var(--color-floral-rose-dark)]"
-                  : "bg-[var(--color-floral-sage-light)]/60 text-[var(--color-floral-sage-dark)]"
-              }`}
-            >
-              {notifyFeedback}
-            </p>
-          )}
-        </div>
-      </div>
-
       <p className="rounded-2xl bg-white/70 p-4 text-xs leading-relaxed text-[#8a7d84] ring-1 ring-[#ebe3ef]">
         Les modifications sont stockées dans Supabase (table{" "}
         <code className="rounded bg-[var(--color-floral-lavender-light)] px-1">
           reveal_settings
         </code>
-        ). Pour les notifications, exécutez aussi{" "}
-        <code className="rounded bg-[var(--color-floral-lavender-light)] px-1">
-          migration-notifications.sql
-        </code>
-        .
+        ).
       </p>
     </div>
   );

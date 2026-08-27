@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import Countdown from "@/components/Countdown";
 import NameGuessing from "@/components/NameGuessing";
 import NameSuggestions from "@/components/NameSuggestions";
-import NotifySignup from "@/components/NotifySignup";
 import BirthListCard from "@/components/BirthListCard";
 import VoteButtons from "@/components/VoteButtons";
 import StatsDisplay from "@/components/StatsDisplay";
@@ -161,7 +160,6 @@ export default function HomeContent() {
         <>
           <NameGuessing />
           <NameSuggestions />
-          <NotifySignup />
           <VoteButtons disabled={false} />
           <div className="glass-card rounded-3xl p-5 sm:p-6">
             <Countdown targetDate={reveal.revealDate} onComplete={fetchReveal} />
@@ -174,7 +172,6 @@ export default function HomeContent() {
           <BirthListCard />
           <NameGuessing />
           <NameSuggestions />
-          <NotifySignup />
         </>
       )}
 
