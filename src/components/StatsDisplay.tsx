@@ -62,7 +62,7 @@ export default function StatsDisplay() {
     <div className="glass-card w-full rounded-3xl p-5 sm:p-6">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-lg font-extrabold text-[#5c4f56]">
-          🌼 Tendance live
+          🌼 Tendance des votes
         </h2>
         <span className="rounded-full bg-[#f0eaf8] px-3 py-1 text-xs font-semibold text-[#a890c0] ring-1 ring-[#e0d4f0]">
           {loading ? "…" : `${stats.total} vote${stats.total !== 1 ? "s" : ""}`}
